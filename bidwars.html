@@ -1612,11 +1612,11 @@
 
             const category = document.getElementById('new-category').value;
 
-            const itemData = {
+            // Supabase-safe payload (no 'category' column in remote DB)
+            const supabaseData = {
                 title: title,
                 description: desc,
-                image_url: image, // Supabase schema uses snake_case
-                category: category,
+                image_url: image,
                 starting_price: price,
                 current_bid: price,
                 highest_bidder_id: null,
@@ -1637,25 +1637,25 @@
                     await new Promise(r => setTimeout(r, 1000));
                     const mockItem = {
                         id: 'mock_' + Date.now(),
-                        title: itemData.title,
-                        description: itemData.description,
-                        imageUrl: itemData.image_url,
-                        category: itemData.category,
-                        startingPrice: itemData.starting_price,
-                        currentBid: itemData.current_bid,
-                        highestBidderId: itemData.highest_bidder_id,
-                        highestBidderName: itemData.highest_bidder_name,
-                        sellerId: itemData.seller_id,
-                        sellerName: itemData.seller_name,
-                        status: itemData.status,
+                        title: supabaseData.title,
+                        description: supabaseData.description,
+                        imageUrl: supabaseData.image_url,
+                        category: category,
+                        startingPrice: supabaseData.starting_price,
+                        currentBid: supabaseData.current_bid,
+                        highestBidderId: supabaseData.highest_bidder_id,
+                        highestBidderName: supabaseData.highest_bidder_name,
+                        sellerId: supabaseData.seller_id,
+                        sellerName: supabaseData.seller_name,
+                        status: supabaseData.status,
                         createdAt: new Date().toISOString()
                     };
                     State.auctions.unshift(mockItem);
                     localStorage.setItem('bm_mock_auctions', JSON.stringify(State.auctions));
                     processAndRenderAuctions();
                 } else {
-                    // REAL SUPABASE INSERT
-                    const { error } = await State.supabase.from('auctions').insert([itemData]);
+                    // REAL SUPABASE INSERT (no 'category' column in remote DB)
+                    const { error } = await State.supabase.from('auctions').insert([supabaseData]);
                     if (error) throw error;
                 }
 
@@ -1670,17 +1670,17 @@
                 await new Promise(r => setTimeout(r, 500));
                 const mockItem = {
                     id: 'mock_' + Date.now(),
-                    title: itemData.title,
-                    description: itemData.description,
-                    imageUrl: itemData.image_url,
-                    category: itemData.category,
-                    startingPrice: itemData.starting_price,
-                    currentBid: itemData.current_bid,
-                    highestBidderId: itemData.highest_bidder_id,
-                    highestBidderName: itemData.highest_bidder_name,
-                    sellerId: itemData.seller_id,
-                    sellerName: itemData.seller_name,
-                    status: itemData.status,
+                    title: supabaseData.title,
+                    description: supabaseData.description,
+                    imageUrl: supabaseData.image_url,
+                    category: category,
+                    startingPrice: supabaseData.starting_price,
+                    currentBid: supabaseData.current_bid,
+                    highestBidderId: supabaseData.highest_bidder_id,
+                    highestBidderName: supabaseData.highest_bidder_name,
+                    sellerId: supabaseData.seller_id,
+                    sellerName: supabaseData.seller_name,
+                    status: supabaseData.status,
                     createdAt: new Date().toISOString()
                 };
                 State.auctions.unshift(mockItem);
