@@ -140,7 +140,7 @@
         input[type="number"]::-webkit-outer-spin-button {
             -webkit-appearance: none; margin: 0;
         }
-        input[type="number"] { -moz-appearance: textfield; }
+        input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
 
         /* --- Matrix Canvas Background --- */
         #matrix-canvas {
@@ -1057,12 +1057,31 @@
         }
 
         async function handleLogout() {
-            if (State.isFallbackMode) {
-                localStorage.removeItem('bm_local_user');
-                window.location.reload();
+            try {
+                if (!State.isFallbackMode && State.supabase) {
+                    await State.supabase.auth.signOut();
+                }
+            } catch(e) { console.warn('SignOut error (non-critical):', e); }
+            
+            // Clear ALL local state regardless of mode
+            localStorage.removeItem('bm_local_user');
+            localStorage.removeItem('bm_mock_auctions');
+            State.user = null;
+            State.profile = null;
+            State.auctions = [];
+            State.selectedItem = null;
+            State.isFallbackMode = false;
+            
+            // Hide marketplace, show auth screen
+            const app = document.getElementById('app-container');
+            if (app) {
+                app.classList.add('opacity-0');
+                setTimeout(() => {
+                    app.classList.add('hidden');
+                    showAuthScreen();
+                }, 400);
             } else {
-                await State.supabase.auth.signOut();
-                // Listener reloads app automatically
+                window.location.reload();
             }
         }
 
@@ -1523,8 +1542,179 @@
                 `;
             }
 
+            // Share button (always visible)
+            actionHtml += `
+                <div class="mt-4 pt-4 border-t border-zinc-800/50">
+                    <button onclick="shareScreencard()" class="w-full py-3 rounded-xl font-mono font-bold text-xs transition-all uppercase tracking-widest flex items-center justify-center gap-2 bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 hover:border-cyan-600 text-zinc-400 hover:text-cyan-400 active:scale-95">
+                        <i data-lucide="share-2" class="w-4 h-4"></i> Share Intel Card
+                    </button>
+                </div>
+            `;
+
             actionArea.innerHTML = actionHtml;
             try { lucide.createIcons(); } catch(e){}
+        }
+
+        // ==========================================
+        // SHARE SCREENCARD GENERATOR
+        // ==========================================
+        async function shareScreencard() {
+            const item = State.selectedItem;
+            if (!item) return;
+
+            const W = 600, H = 400;
+            const canvas = document.createElement('canvas');
+            canvas.width = W;
+            canvas.height = H;
+            const ctx = canvas.getContext('2d');
+
+            // Background gradient
+            const bg = ctx.createLinearGradient(0, 0, W, H);
+            bg.addColorStop(0, '#0a0a0f');
+            bg.addColorStop(0.5, '#111118');
+            bg.addColorStop(1, '#0a0a0f');
+            ctx.fillStyle = bg;
+            ctx.fillRect(0, 0, W, H);
+
+            // Grid pattern overlay
+            ctx.strokeStyle = 'rgba(255,255,255,0.02)';
+            ctx.lineWidth = 1;
+            for (let i = 0; i < W; i += 30) { ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, H); ctx.stroke(); }
+            for (let i = 0; i < H; i += 30) { ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(W, i); ctx.stroke(); }
+
+            // Top accent line
+            const accent = ctx.createLinearGradient(0, 0, W, 0);
+            accent.addColorStop(0, 'rgba(220,38,38,0)');
+            accent.addColorStop(0.5, 'rgba(220,38,38,0.8)');
+            accent.addColorStop(1, 'rgba(220,38,38,0)');
+            ctx.fillStyle = accent;
+            ctx.fillRect(0, 0, W, 3);
+
+            // Brand badge
+            ctx.fillStyle = '#dc2626';
+            roundRect(ctx, 30, 25, 40, 22, 4); ctx.fill();
+            ctx.fillStyle = '#fff'; ctx.font = 'bold 11px monospace';
+            ctx.fillText('BM', 39, 40);
+
+            // Title "THE PIT"
+            ctx.fillStyle = '#a1a1aa'; ctx.font = 'bold 10px monospace';
+            ctx.fillText('THE INFINITE PIT', 80, 40);
+
+            // Status badge
+            const isSold = item.status === 'sold';
+            ctx.fillStyle = isSold ? 'rgba(127,29,29,0.6)' : 'rgba(6,78,59,0.6)';
+            roundRect(ctx, 430, 25, isSold ? 80 : 70, 22, 4); ctx.fill();
+            ctx.fillStyle = isSold ? '#fca5a5' : '#86efac'; ctx.font = 'bold 9px monospace';
+            ctx.fillText(isSold ? '⊘ SEALED' : '◉ ACTIVE', 440, 40);
+
+            // Divider
+            ctx.strokeStyle = 'rgba(63,63,70,0.5)'; ctx.lineWidth = 1;
+            ctx.beginPath(); ctx.moveTo(30, 60); ctx.lineTo(W - 30, 60); ctx.stroke();
+
+            // Item Title
+            ctx.fillStyle = '#ffffff'; ctx.font = 'bold 28px monospace';
+            const titleText = item.title.length > 22 ? item.title.substring(0, 22) + '...' : item.title;
+            ctx.fillText(titleText.toUpperCase(), 30, 100);
+
+            // Red accent bar under title
+            ctx.fillStyle = '#dc2626';
+            ctx.fillRect(30, 112, 60, 3);
+
+            // Description (truncated)
+            ctx.fillStyle = '#a1a1aa'; ctx.font = '13px monospace';
+            const descText = item.description.length > 70 ? '> ' + item.description.substring(0, 70) + '...' : '> ' + item.description;
+            ctx.fillText(descText, 30, 145);
+
+            // Category badge
+            const catLabel = getCategoryLabel(item.category);
+            ctx.fillStyle = 'rgba(245,158,11,0.15)';
+            roundRect(ctx, 30, 165, ctx.measureText(catLabel).width + 20, 22, 4); ctx.fill();
+            ctx.fillStyle = '#f59e0b'; ctx.font = 'bold 10px monospace';
+            ctx.fillText(catLabel, 40, 180);
+
+            // Price box
+            ctx.fillStyle = 'rgba(0,0,0,0.6)';
+            ctx.strokeStyle = 'rgba(63,63,70,0.5)'; ctx.lineWidth = 1;
+            roundRect(ctx, 30, 210, W - 60, 80, 8); ctx.fill(); ctx.stroke();
+
+            ctx.fillStyle = '#71717a'; ctx.font = 'bold 9px monospace';
+            ctx.fillText('CURRENT BOUNTY', 50, 236);
+            ctx.fillStyle = '#4ade80'; ctx.font = 'bold 36px monospace';
+            ctx.fillText('$' + item.currentBid.toLocaleString(), 50, 275);
+
+            ctx.fillStyle = '#71717a'; ctx.font = 'bold 9px monospace';
+            ctx.fillText('TOP NODE', 380, 236);
+            ctx.fillStyle = '#ffffff'; ctx.font = 'bold 14px monospace';
+            const bidder = item.highestBidderName || 'NONE';
+            ctx.fillText(bidder.length > 12 ? bidder.substring(0, 12) + '..' : bidder, 380, 258);
+
+            ctx.fillStyle = '#71717a'; ctx.font = 'bold 9px monospace';
+            ctx.fillText('SOURCE NODE', 380, 278);
+            ctx.fillStyle = '#e4e4e7'; ctx.font = 'bold 11px monospace';
+            ctx.fillText(item.sellerName || 'UNKNOWN', 380, 292);
+
+            // Footer
+            ctx.fillStyle = 'rgba(63,63,70,0.3)';
+            ctx.fillRect(0, H - 50, W, 50);
+            ctx.strokeStyle = 'rgba(63,63,70,0.5)'; ctx.lineWidth = 1;
+            ctx.beginPath(); ctx.moveTo(0, H - 50); ctx.lineTo(W, H - 50); ctx.stroke();
+
+            ctx.fillStyle = '#52525b'; ctx.font = '10px monospace';
+            ctx.fillText('NONSENCE BLACK MARKET · THE INFINITE PIT', 30, H - 22);
+            const ts = new Date().toLocaleString();
+            ctx.fillText(ts, W - ctx.measureText(ts).width - 30, H - 22);
+
+            // Bottom accent
+            const bottomAccent = ctx.createLinearGradient(0, 0, W, 0);
+            bottomAccent.addColorStop(0, 'rgba(6,182,212,0)');
+            bottomAccent.addColorStop(0.5, 'rgba(6,182,212,0.6)');
+            bottomAccent.addColorStop(1, 'rgba(6,182,212,0)');
+            ctx.fillStyle = bottomAccent;
+            ctx.fillRect(0, H - 2, W, 2);
+
+            // Convert to blob and share/download
+            canvas.toBlob(async (blob) => {
+                const fileName = `BM_${item.title.replace(/[^a-zA-Z0-9]/g, '_')}_${Date.now()}.png`;
+                
+                // Try native share if available
+                if (navigator.share && navigator.canShare) {
+                    try {
+                        const file = new File([blob], fileName, { type: 'image/png' });
+                        if (navigator.canShare({ files: [file] })) {
+                            await navigator.share({
+                                title: `${item.title} - Black Market Intel`,
+                                text: `Bounty: $${item.currentBid.toLocaleString()} | ${item.description.substring(0, 80)}`,
+                                files: [file]
+                            });
+                            showToast('Intel shared via secure channel.');
+                            return;
+                        }
+                    } catch(e) { if (e.name !== 'AbortError') console.warn('Share failed:', e); }
+                }
+                
+                // Fallback: download the image
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url; a.download = fileName;
+                document.body.appendChild(a); a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                showToast('Intel card downloaded. Distribute with caution.');
+            }, 'image/png');
+        }
+
+        function roundRect(ctx, x, y, w, h, r) {
+            ctx.beginPath();
+            ctx.moveTo(x + r, y);
+            ctx.lineTo(x + w - r, y);
+            ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+            ctx.lineTo(x + w, y + h - r);
+            ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+            ctx.lineTo(x + r, y + h);
+            ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+            ctx.lineTo(x, y + r);
+            ctx.quadraticCurveTo(x, y, x + r, y);
+            ctx.closePath();
         }
 
         // ==========================================
