@@ -6,6 +6,15 @@
     <title>NonSence Black Market | The Infinite Pit</title>
     
     <!-- ==========================================
+         PWA & DEVICE INTEGRATION
+         ========================================== -->
+    <link rel="manifest" href="./manifest.json">
+    <meta name="theme-color" content="#030303">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="BM The Pit">
+    
+    <!-- ==========================================
          FONTS & TYPOGRAPHY
          ========================================== -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -512,6 +521,9 @@
             <div class="p-4 border-t border-zinc-800 space-y-2 bg-black/40">
                 <button onclick="toggleAddModal(true)" class="w-full flex items-center justify-center gap-2 bg-red-900 border border-red-700 text-white px-4 py-3 rounded-lg font-mono font-bold hover:bg-red-800 active:scale-95 transition-all shadow-neon-red text-xs uppercase tracking-widest">
                     <i data-lucide="upload" class="w-4 h-4"></i> Smuggle
+                </button>
+                <button id="install-app-btn" class="w-full hidden items-center justify-center gap-2 bg-zinc-800 border border-zinc-700 text-white px-4 py-3 rounded-lg font-mono font-bold hover:bg-zinc-700 active:scale-95 transition-all shadow-lg text-xs uppercase tracking-widest">
+                    <i data-lucide="download" class="w-4 h-4"></i> Install App
                 </button>
                 <button onclick="handleLogout()" class="w-full flex items-center justify-center gap-2 text-zinc-500 hover:text-red-400 px-4 py-3 rounded-lg font-mono text-xs uppercase tracking-widest transition-colors">
                     <i data-lucide="power" class="w-4 h-4"></i> Disconnect
@@ -2243,6 +2255,40 @@
             window.addEventListener('resize', () => {
                 canvas.width = window.innerWidth;
                 canvas.height = window.innerHeight;
+            });
+        }
+
+        // PWA & Device Integration Initialization
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            const installBtn = document.getElementById('install-app-btn');
+            if (installBtn) {
+                installBtn.classList.remove('hidden');
+                installBtn.classList.add('flex');
+                installBtn.addEventListener('click', async () => {
+                    if (deferredPrompt) {
+                        deferredPrompt.prompt();
+                        const { outcome } = await deferredPrompt.userChoice;
+                        if (outcome === 'accepted') {
+                            console.log('User accepted the install prompt');
+                        } else {
+                            console.log('User dismissed the install prompt');
+                        }
+                        deferredPrompt = null;
+                        installBtn.classList.add('hidden');
+                        installBtn.classList.remove('flex');
+                    }
+                });
+            }
+        });
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                .then(reg => console.log('Service Worker Registered!', reg.scope))
+                .catch(err => console.error('Service Worker Registration Failed:', err));
             });
         }
 
