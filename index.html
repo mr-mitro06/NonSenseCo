@@ -826,6 +826,7 @@
         window.setFilter = setFilter;
         window.handleSearch = handleSearch;
         window.openItemDetails = openItemDetails;
+        window.deleteAdminAsset = deleteAdminAsset;
 
         // ==========================================
         // SYSTEM INITIALIZATION
@@ -1548,6 +1549,18 @@
                 `;
             }
 
+            // Admin Terminate Button
+            const isAdmin = State.user && State.user.email === 'abhinavdas2600@gmail.com';
+            if (isAdmin) {
+                actionHtml += `
+                    <div class="mt-4 pt-4 border-t border-red-900/50">
+                        <button onclick="deleteAdminAsset('${item.id}')" class="w-full py-3 rounded-xl font-mono font-bold text-xs transition-all uppercase tracking-widest flex items-center justify-center gap-2 bg-red-950 hover:bg-red-900 border border-red-800 text-red-500 hover:text-white active:scale-95 shadow-neon-red">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i> Admin Terminate Asset
+                        </button>
+                    </div>
+                `;
+            }
+
             // Share button (always visible)
             actionHtml += `
                 <div class="mt-4 pt-4 border-t border-zinc-800/50">
@@ -1559,6 +1572,45 @@
 
             actionArea.innerHTML = actionHtml;
             try { lucide.createIcons(); } catch(e){}
+        }
+
+        // ==========================================
+        // ADMIN OPERATIONS
+        // ==========================================
+        async function deleteAdminAsset(id) {
+            // First stop event propagation if needed, but not required since it's a modal action
+            if (!confirm("ADMIN PURGE: Are you sure you want to permanently delete this asset from the database?")) return;
+
+            // Visual feedback
+            const btn = document.querySelector('button[onclick^="deleteAdminAsset("]');
+            if (btn) {
+                btn.innerHTML = '<i data-lucide="loader" class="w-4 h-4 animate-spin"></i> Terminating...';
+                try { lucide.createIcons(); } catch(e){}
+            }
+
+            if (State.isFallbackMode) {
+                State.auctions = State.auctions.filter(a => a.id !== id);
+                localStorage.setItem('bm_mock_auctions', JSON.stringify(State.auctions));
+                toggleDetailsModal(false);
+                processAndRenderAuctions();
+                showToast("Admin Force Delete: Local Asset Terminated.", "success");
+                return;
+            }
+
+            try {
+                // Perform the actual DB deletion
+                const { error } = await State.supabase.from('auctions').delete().eq('id', id);
+                if (error) throw error;
+                
+                showToast("Admin Force Delete: Network Asset Terminated.", "success");
+                toggleDetailsModal(false);
+                softRefreshAuctions();
+            } catch (err) {
+                console.error("Delete failed:", err);
+                showToast("Admin Action Failed: " + err.message, "error");
+                if (btn) btn.innerHTML = '<i data-lucide="alert-triangle" class="w-4 h-4"></i> Failed';
+                try { lucide.createIcons(); } catch(e){}
+            }
         }
 
         // ==========================================
