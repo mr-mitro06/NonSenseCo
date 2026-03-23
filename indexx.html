@@ -433,12 +433,11 @@
             <h2 class="text-2xl font-mono font-black text-red-500 mb-4 text-center uppercase tracking-tighter">Critical Warning</h2>
             
             <div class="space-y-4 font-mono text-sm text-zinc-300 bg-black/50 p-6 rounded-lg border border-red-900/30">
-                <p class="flex gap-3 items-start"><span class="text-red-500 font-bold mt-0.5">1.</span> <span>If the application cannot connect to the primary database, it will automatically fall back to a <strong>LOCAL CACHE</strong> mode. Always check the connection status.</span></p>
-                <p class="flex gap-3 items-start"><span class="text-red-500 font-bold mt-0.5">2.</span> <span>This network operates with <strong>REAL financial risk</strong> and handles real transactions. Use with extreme caution.</span></p>
-                <p class="flex gap-3 items-start"><span class="text-red-500 font-bold mt-0.5">3.</span> <span>Malicious or bad use of this terminal will lead to a <strong>PERMANENT BAN</strong>. Use wisely.</span></p>
+                <p class="flex gap-3 items-start"><span class="text-red-500 font-bold mt-0.5">1.</span> <span>This network operates with <strong>REAL financial risk</strong> and handles real transactions. Use with extreme caution.</span></p>
+                <p class="flex gap-3 items-start"><span class="text-red-500 font-bold mt-0.5">2.</span> <span>Malicious or bad use of this terminal will lead to a <strong>PERMANENT BAN</strong>. Use wisely.</span></p>
                 
                 <div class="mt-4 pt-4 border-t border-red-900/30 text-center text-xs text-red-400 font-bold uppercase tracking-widest">
-                    Important: First create an account (Identity) and then login to access the database.
+                    Important: You will receive a One-Time Password via email to authenticate.
                 </div>
             </div>
 
@@ -471,7 +470,7 @@
             <h2 id="auth-title" class="text-2xl font-sans font-bold text-white mb-2 text-center uppercase tracking-tight">Access Terminal</h2>
             <p id="auth-subtitle" class="text-zinc-500 text-xs mb-8 text-center font-mono uppercase tracking-widest">Identify yourself to the network.</p>
 
-            <!-- Inputs -->
+                <!-- Inputs -->
             <div class="space-y-5">
                 
                 <div id="alias-field" class="relative hidden group">
@@ -481,16 +480,11 @@
 
                 <div class="relative group">
                     <i data-lucide="mail" class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600 group-focus-within:text-red-500 transition-colors"></i>
-                    <input type="email" id="auth-email" placeholder="Encrypted Email" class="w-full p-4 pl-12 bg-black border border-zinc-800 rounded-xl text-white placeholder:text-zinc-700 focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500 font-mono text-sm shadow-glass-inset transition-all">
-                </div>
-
-                <div class="relative group">
-                    <i data-lucide="key" class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600 group-focus-within:text-red-500 transition-colors"></i>
-                    <input type="password" id="auth-password" placeholder="Passphrase (Min 6 chars)" class="w-full p-4 pl-12 bg-black border border-zinc-800 rounded-xl text-white placeholder:text-zinc-700 focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500 font-mono text-sm shadow-glass-inset transition-all">
+                    <input type="email" id="auth-email" placeholder="Encrypted Email Address" class="w-full p-4 pl-12 bg-black border border-zinc-800 rounded-xl text-white placeholder:text-zinc-700 focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500 font-mono text-sm shadow-glass-inset transition-all">
                 </div>
                 
                 <button id="auth-submit-btn" onclick="handleAuthAction()" class="w-full py-4 bg-red-900 hover:bg-red-800 border border-red-700 text-white rounded-xl font-bold active:scale-95 spring-transition shadow-neon-red flex justify-center items-center gap-2 mt-2 uppercase tracking-widest font-mono text-sm">
-                    Initiate Handshake <i data-lucide="cpu" class="w-4 h-4"></i>
+                    Request Authentication Token <i data-lucide="cpu" class="w-4 h-4"></i>
                 </button>
             </div>
 
@@ -556,11 +550,6 @@
                             <span class="text-[10px] text-green-500 font-mono font-bold" id="sidebar-balance">$0</span>
                         </div>
                     </div>
-                </div>
-                <!-- Offline Badge -->
-                <div id="offline-badge" class="hidden mt-3 px-3 py-2 bg-amber-950/50 border border-amber-500/50 rounded-lg flex items-center gap-2">
-                    <span class="w-2 h-2 bg-amber-400 rounded-full animate-pulse"></span>
-                    <span class="text-[9px] font-mono font-bold text-amber-400 uppercase tracking-widest">Local Cache Active</span>
                 </div>
             </div>
 
@@ -806,9 +795,8 @@
                 </p>
 
                 <div class="mb-6 text-center w-full bg-black/50 p-4 border border-zinc-800 rounded mb-8">
-                    <p class="text-[10px] text-zinc-500 uppercase tracking-widest mb-2 font-bold">Simulated Token Received:</p>
-                    <p id="generated-otp-display" class="font-mono text-3xl font-black text-green-400 tracking-[0.2em] mb-1">------</p>
-                    <p class="text-[9px] text-zinc-600 uppercase italic">(Copy this code)</p>
+                    <p class="text-[10px] text-zinc-500 uppercase tracking-widest mb-2 font-bold">Check your encrypted mail</p>
+                    <p class="text-[9px] text-zinc-600 uppercase italic">A token was dispatched to your address.</p>
                 </div>
 
                 <div class="flex justify-center gap-2 mb-8" id="otp-input-group">
@@ -993,7 +981,6 @@
         // ==========================================
         const State = {
             supabase: null,
-            isFallbackMode: false, // Switches to LocalStorage if DB fails
             user: null,            // Auth object
             profile: null,         // Database profile (alias, etc)
             auctions: [],          // Array of all items
@@ -1094,7 +1081,7 @@
         }
 
         // ==========================================
-        // DATABASE CONNECTION (WITH FALLBACK)
+        // DATABASE CONNECTION
         // ==========================================
         async function initDatabase() {
             const supabaseUrl = 'https://qjlvymojlvibalquktvs.supabase.co';
@@ -1103,12 +1090,9 @@
             try {
                 State.supabase = createClient(supabaseUrl, supabaseKey);
                 
-                // Attempt to get session to test connection
                 const { data: { session }, error } = await State.supabase.auth.getSession();
-                
                 if (error) throw error;
 
-                // Listen for Auth changes globally
                 State.supabase.auth.onAuthStateChange(async (event, session) => {
                     if (session) {
                         State.user = session.user;
@@ -1128,26 +1112,17 @@
                 }
 
             } catch (err) {
-                console.error("CRITICAL DB FAILURE. Switching to Local Fallback Mode.", err);
-                State.isFallbackMode = true;
-                showToast("DB Unreachable. Running in Local Simulation Mode.", "error");
-                
-                // Fallback Logic
-                const localUser = localStorage.getItem('bm_local_user');
-                if (localUser) {
-                    State.profile = JSON.parse(localUser);
-                    State.user = { id: State.profile.id };
-                    bootMainApp();
-                } else {
-                    showAuthScreen();
-                }
+                console.error("CRITICAL DB FAILURE.", err);
+                showToast("DB Unreachable. Please check your network.", "error");
+                showAuthScreen();
             }
         }
 
         // ==========================================
         // AUTHENTICATION & OTP
         // ==========================================
-        let currentGeneratedOTP = "";
+        let currentAuthEmail = "";
+        let currentAuthAlias = "";
 
         function setupOTPInputs() {
             const inputs = document.querySelectorAll('.otp-input');
@@ -1169,15 +1144,17 @@
             document.getElementById('otp-screen').classList.replace('visible-state', 'hidden-state');
             document.getElementById('auth-form').classList.replace('hidden-state', 'visible-state');
             document.querySelectorAll('.otp-input').forEach(i => i.value = '');
+            const btnEl = document.getElementById('auth-submit-btn');
+            btnEl.innerHTML = `Request Authentication Token <i data-lucide="cpu" class="w-4 h-4"></i>`;
+            btnEl.disabled = false;
         }
 
-        function verifyOTP() {
+        async function verifyOTP() {
             const inputs = document.querySelectorAll('.otp-input');
             let enteredOTP = "";
             inputs.forEach(i => enteredOTP += i.value);
 
-            if (enteredOTP !== currentGeneratedOTP) {
-                showAuthError("ERR: Invalid cryptographic token. Verification failed.");
+            if (enteredOTP.length !== 6) {
                 inputs.forEach(i => {
                     i.classList.add('border-red-500', 'bg-red-950/20');
                     setTimeout(() => i.classList.remove('border-red-500', 'bg-red-950/20'), 1000);
@@ -1185,30 +1162,71 @@
                 return;
             }
 
-            // OTP Success
-            document.getElementById('otp-screen').classList.replace('visible-state', 'hidden-state');
-            
-            // Re-show processing screen for final boot
-            const processingScreenEl = document.getElementById('auth-processing');
-            const processingText = document.getElementById('auth-processing-text'); // Use processingText here
-            processingScreenEl.classList.remove('hidden');
-            processingScreenEl.classList.replace('opacity-0', 'opacity-100');
-            processingText.textContent = "VERIFICATION COMPLETE."; // Update status text
-            
-            setTimeout(() => bootMainApp(), 800);
+            const verifyBtn = document.getElementById('verify-otp-btn');
+            verifyBtn.innerHTML = `<i data-lucide="loader" class="w-4 h-4 animate-spin"></i> Initializing...`;
+            verifyBtn.disabled = true;
+
+            try {
+                const { data, error } = await State.supabase.auth.verifyOtp({
+                    email: currentAuthEmail,
+                    token: enteredOTP,
+                    type: 'email'
+                });
+
+                if (error) throw error;
+                
+                // Check if profile exists, if not create it
+                if (data.user) {
+                    const { data: profileCheck, error: pErr } = await State.supabase
+                        .from('profiles')
+                        .select('id')
+                        .eq('id', data.user.id)
+                        .single();
+                        
+                    if (pErr && pErr.code === 'PGRST116') {
+                        // Profile doesn't exist. Create it with 0 balance.
+                        await State.supabase.from('profiles').upsert({
+                            id: data.user.id,
+                            alias: currentAuthAlias || 'Node_' + Math.floor(Math.random() * 9999),
+                            balance: 0
+                        });
+                    }
+                }
+
+                // OTP Success
+                document.getElementById('otp-screen').classList.replace('visible-state', 'hidden-state');
+                
+                // Re-show processing screen for final boot
+                const processingScreenEl = document.getElementById('auth-processing');
+                const processingText = document.getElementById('auth-processing-text');
+                processingScreenEl.classList.remove('hidden');
+                processingScreenEl.classList.replace('opacity-0', 'opacity-100');
+                processingText.textContent = "VERIFICATION COMPLETE."; 
+                
+                // fetchProfile and bootMainApp will be called by onAuthStateChange listener
+                
+            } catch (err) {
+                console.error("OTP Error:", err);
+                verifyBtn.innerHTML = `Establish Link <i data-lucide="zap" class="w-4 h-4"></i>`;
+                verifyBtn.disabled = false;
+                showToast("Invalid code or expired. Try again.", "error");
+                inputs.forEach(i => {
+                    i.classList.add('border-red-500', 'bg-red-950/20');
+                    setTimeout(() => i.classList.remove('border-red-500', 'bg-red-950/20'), 1000);
+                });
+            }
         }
 
         async function handleAuthAction() {
             const email = document.getElementById('auth-email').value.trim();
-            const password = document.getElementById('auth-password').value;
             const alias = document.getElementById('auth-alias').value.trim();
             const errorEl = document.getElementById('auth-error');
             const btn = document.getElementById('auth-submit-btn');
             
             errorEl.classList.add('hidden');
 
-            if (!email || password.length < 6) {
-                showAuthError("ERR: Valid email and min 6-char passphrase required.");
+            if (!email) {
+                showAuthError("ERR: Valid email address required.");
                 return;
             }
 
@@ -1217,161 +1235,39 @@
                 return;
             }
 
+            currentAuthEmail = email;
+            currentAuthAlias = alias;
+
             // Visual Processing State
-            const originalBtn = btn.innerHTML;
             btn.innerHTML = `<i data-lucide="loader" class="w-4 h-4 animate-spin"></i> Processing...`;
             btn.disabled = true;
 
-            // Trigger Fake 2FA Screen for visual flair
-            document.getElementById('auth-form').classList.add('hidden-state');
-            document.getElementById('auth-form').classList.remove('visible-state');
-            
-            const processingScreen = document.getElementById('auth-processing');
-            const progressBar = document.getElementById('auth-progress-bar');
-            const processingText = document.getElementById('auth-processing-text');
-            processingScreen.classList.remove('hidden');
-            setTimeout(() => {
-                processingScreen.classList.remove('opacity-0');
-                processingScreen.classList.add('opacity-100');
-                // Animate the progress bar
-                progressBar.classList.add('animate-hack-progress');
-                // Simulated status text updates
-                const statusMsgs = [
-                    'Decrypting neural signature...',
-                    'Cross-referencing node registry...',
-                    'Validating biometric hash...',
-                    'Establishing encrypted tunnel...',
-                    'Handshake complete.'
-                ];
-                statusMsgs.forEach((msg, i) => {
-                    setTimeout(() => { processingText.textContent = msg; }, (i + 1) * 700);
-                });
-            }, 50);
-
-            // Execute Actual Auth logic behind the scenes
             try {
-                if (State.isFallbackMode) {
-                    // Local Storage Mock Login
-                    await new Promise(r => setTimeout(r, 2000)); // Fake delay
-                    const mockProfile = { id: 'usr_' + Date.now(), alias: State.isLoginMode ? email.split('@')[0] : alias, balance: 10000 };
-                    localStorage.setItem('bm_local_user', JSON.stringify(mockProfile));
-                    State.profile = mockProfile;
-                    State.user = { id: mockProfile.id };
-                    
-                    if (State.isLoginMode) {
-                        bootMainApp();
-                    } else {
-                        // Fallback OTP flow for signup
-                        const processingScreenEl = document.getElementById('auth-processing');
-                        processingScreenEl.classList.add('opacity-0');
-                        processingScreenEl.classList.remove('opacity-100');
-                        setTimeout(() => {
-                            processingScreenEl.classList.add('hidden');
-                            currentGeneratedOTP = Math.floor(100000 + Math.random() * 900000).toString();
-                            document.getElementById('generated-otp-display').textContent = currentGeneratedOTP;
-                            setupOTPInputs();
-                            document.getElementById('otp-screen').classList.replace('hidden-state', 'visible-state');
-                            document.querySelector('.otp-input').focus();
-                        }, 400);
+                // Send OTP Magic Link
+                const { error } = await State.supabase.auth.signInWithOtp({
+                    email: email,
+                    options: {
+                        shouldCreateUser: !State.isLoginMode
                     }
-                } else {
-                    // REAL SUPABASE AUTH
-                    if (State.isLoginMode) {
-                        const { error } = await State.supabase.auth.signInWithPassword({ email, password });
-                        if (error) throw error;
-                        // If login successful, onAuthStateChange will handle fetchProfile and bootMainApp
-                    } else {
-                        const { data, error } = await State.supabase.auth.signUp({ email, password });
-                        if (error) throw error;
-                        
-                        // Create profile
-                        if (data.user) {
-                            await State.supabase.from('profiles').upsert({ id: data.user.id, alias: alias });
-                        }
-                        // For signup, we transition to OTP screen
-                    }
+                });
 
-                    // If we reached here without error, and it's a signup, show OTP
-                    if (!State.isLoginMode) {
-                        setTimeout(() => {
-                            processingScreen.classList.add('opacity-0');
-                            processingScreen.classList.remove('opacity-100');
-                            
-                            setTimeout(() => {
-                                processingScreen.classList.add('hidden');
-                                // Generate random 6 digit OTP
-                                currentGeneratedOTP = Math.floor(100000 + Math.random() * 900000).toString();
-                                document.getElementById('generated-otp-display').textContent = currentGeneratedOTP;
-                                
-                                setupOTPInputs();
-                                document.getElementById('otp-screen').classList.remove('hidden-state');
-                                document.getElementById('otp-screen').classList.add('visible-state');
-                                document.querySelector('.otp-input').focus();
-                            }, 400);
-                        }, 1000); // Keep processing screen for a bit longer for visual effect
-                    } else {
-                        // For login, just update button and let onAuthStateChange handle the rest
-                        const authBtn = document.getElementById('auth-submit-btn');
-                        authBtn.innerHTML = `VERIFIED <i data-lucide="check" class="w-4 h-4"></i>`;
-                        authBtn.classList.add('bg-green-600', 'hover:bg-green-500');
-                        try { lucide.createIcons(); } catch(e){}
-                        // fetchProfile will be called by onAuthStateChange
-                    }
-                }
+                if (error) throw error;
+
+                // Show OTP input screen
+                document.getElementById('auth-form').classList.add('hidden-state');
+                document.getElementById('auth-form').classList.remove('visible-state');
+                
+                setupOTPInputs();
+                const otpScreen = document.getElementById('otp-screen');
+                otpScreen.classList.remove('hidden-state');
+                otpScreen.classList.add('visible-state');
+                setTimeout(() => document.querySelector('.otp-input').focus(), 100);
+
             } catch (err) {
-                console.error("Auth Fail — activating fallback:", err);
-                
-                // Reset processing screen properly
-                const processingScreenEl = document.getElementById('auth-processing');
-                const progressBarEl = document.getElementById('auth-progress-bar');
-                processingScreenEl.classList.add('opacity-0');
-                processingScreenEl.classList.remove('opacity-100');
-                progressBarEl.classList.remove('animate-hack-progress');
-                progressBarEl.style.width = '0%';
-                
-                setTimeout(() => {
-                    processingScreenEl.classList.add('hidden');
-                    const formEl = document.getElementById('auth-form');
-                    formEl.classList.remove('hidden-state');
-                    formEl.classList.add('visible-state');
-                    
-                    // Show error to user
-                    const errMsg = err.message || 'Authentication failed.';
-                    showAuthError(`ERR: ${errMsg}`);
-                    
-                    // Reset button
-                    const btnEl = document.getElementById('auth-submit-btn');
-                    btnEl.innerHTML = State.isLoginMode 
-                        ? `Initiate Handshake <i data-lucide="cpu" class="w-4 h-4"></i>`
-                        : `Construct Alias <i data-lucide="user-plus" class="w-4 h-4"></i>`;
-                    btnEl.disabled = false;
-                    try { lucide.createIcons(); } catch(e){}
-                }, 400);
-                
-                // SILENT FAILOVER: Switch to local mode and create ghost user
-                activateFallback();
-                await new Promise(r => setTimeout(r, 2000)); // Let the error show
-                const mockProfile = { id: 'usr_' + Date.now(), alias: State.isLoginMode ? email.split('@')[0] : (alias || 'Ghost_' + Math.floor(Math.random()*999)), balance: 10000 };
-                localStorage.setItem('bm_local_user', JSON.stringify(mockProfile));
-                State.profile = mockProfile;
-                State.user = { id: mockProfile.id };
-                
-                if (State.isLoginMode) {
-                    bootMainApp();
-                } else {
-                    // Fallback OTP flow
-                    const processingScreenEl = document.getElementById('auth-processing');
-                    processingScreenEl.classList.add('opacity-0');
-                    processingScreenEl.classList.remove('opacity-100');
-                    setTimeout(() => {
-                        processingScreenEl.classList.add('hidden');
-                        currentGeneratedOTP = Math.floor(100000 + Math.random() * 900000).toString();
-                        document.getElementById('generated-otp-display').textContent = currentGeneratedOTP;
-                        setupOTPInputs();
-                        document.getElementById('otp-screen').classList.replace('hidden-state', 'visible-state');
-                        document.querySelector('.otp-input').focus();
-                    }, 400);
-                }
+                console.error("Auth Fail:", err);
+                showAuthError(`ERR: ${err.message || 'Transmission failed.'}`);
+                btn.innerHTML = `Request Authentication Token <i data-lucide="cpu" class="w-4 h-4"></i>`;
+                btn.disabled = false;
             }
         }
 
@@ -1390,26 +1286,23 @@
 
         async function handleLogout() {
             try {
-                if (!State.isFallbackMode && State.supabase) {
+                if (State.supabase) {
                     await State.supabase.auth.signOut();
                 }
             } catch(e) { console.warn('SignOut error (non-critical):', e); }
             
-            // Clear ALL local state regardless of mode
             localStorage.removeItem('bm_local_user');
-            localStorage.removeItem('bm_mock_auctions');
             State.user = null;
             State.profile = null;
             State.auctions = [];
             State.selectedItem = null;
-            State.isFallbackMode = false;
             
             // Hide marketplace, show auth screen
-            const app = document.getElementById('app-container');
+            const app = document.getElementById('main-app');
             if (app) {
-                app.classList.add('opacity-0');
+                app.classList.add('hidden-state');
+                app.classList.remove('visible-state');
                 setTimeout(() => {
-                    app.classList.add('hidden');
                     showAuthScreen();
                 }, 400);
             } else {
@@ -1454,14 +1347,6 @@
             if(isAdmin) {
                 document.getElementById('admin-nav-section').classList.remove('hidden');
                 document.getElementById('admin-nav-section').classList.add('block');
-            }
-
-            // Offline badge
-            if (State.isFallbackMode) {
-                document.getElementById('offline-badge').classList.remove('hidden');
-                const connStatus = document.getElementById('connection-status');
-                connStatus.className = 'px-2 py-1 bg-amber-900/30 border border-amber-500/50 text-amber-400 text-[10px] rounded animate-pulse shadow-[0_0_15px_rgba(245,158,11,0.3)] flex items-center gap-1';
-                connStatus.innerHTML = '<span class="w-1.5 h-1.5 bg-amber-400 rounded-full"></span> LOCAL CACHE';
             }
 
             // Populate live ticker
@@ -1971,115 +1856,81 @@
             }
 
             try {
-                if (State.isFallbackMode) {
-                    // Local simulation
-                    if (aliasOrId.toLowerCase() === State.profile.alias.toLowerCase() || aliasOrId === State.profile.id) {
-                        State.profile.balance += amount;
-                        document.getElementById('sidebar-balance').textContent = `$${State.profile.balance.toLocaleString()}`;
-                        localStorage.setItem('bm_local_user', JSON.stringify(State.profile));
-                        showToast(`SUCCESS: $${amount.toLocaleString()} injected to ${State.profile.alias}.`);
-                        toggleAdminPanel(false);
-                    } else {
-                        showToast("ERR: Node not found in local cache.", "error");
-                    }
-                } else {
-                    // Production Supabase (requires RLS to allow this, or Edge Function)
-                    // First find the user
-                    const { data: users, error: findErr } = await State.supabase
-                        .from('profiles')
-                        .select('*')
-                        .or(`alias.eq.${aliasOrId},id.eq.${aliasOrId}`)
-                        .limit(1);
+                // Production Supabase
+                const { data: users, error: findErr } = await State.supabase
+                    .from('profiles')
+                    .select('*')
+                    .or(`alias.eq.${aliasOrId},id.eq.${aliasOrId}`)
+                    .limit(1);
 
-                    if (findErr || !users || users.length === 0) throw new Error("Node not found");
+                if (findErr || !users || users.length === 0) throw new Error("Node not found");
+                
+                const targetUser = users[0];
+                const newBal = (targetUser.balance || 0) + amount;
+                
+                const { error: updateErr } = await State.supabase
+                    .from('profiles')
+                    .update({ balance: newBal })
+                    .eq('id', targetUser.id);
                     
-                    const targetUser = users[0];
-                    const newBal = (targetUser.balance || 0) + amount;
-                    
-                    const { error: updateErr } = await State.supabase
-                        .from('profiles')
-                        .update({ balance: newBal })
-                        .eq('id', targetUser.id);
-                        
-                    if (updateErr) throw updateErr;
+                if (updateErr) throw updateErr;
 
-                    showToast(`SUCCESS: $${amount.toLocaleString()} injected to ${targetUser.alias}.`);
-                    
-                    // If we updated ourselves, update UI
-                    if(targetUser.id === State.profile.id) {
-                        State.profile.balance = newBal;
-                        document.getElementById('sidebar-balance').textContent = `$${State.profile.balance.toLocaleString()}`;
-                    }
-                    toggleAdminPanel(false);
+                showToast(`SUCCESS: $${amount.toLocaleString()} injected to ${targetUser.alias}.`);
+                
+                // If we updated ourselves, update UI
+                if(targetUser.id === State.profile.id) {
+                    State.profile.balance = newBal;
+                    document.getElementById('sidebar-balance').textContent = `$${State.profile.balance.toLocaleString()}`;
                 }
+                toggleAdminPanel(false);
             } catch (err) {
                 console.error("Admin balance error:", err);
                 showToast("Admin Action Failed: " + err.message, "error");
             }
-        }
-
-        async function adminBanUser() {
+               async function adminBanUser() {
             const alias = document.getElementById('admin-ban-user').value.trim();
             if (!alias) return;
 
             if (!confirm(`CRITICAL: Confirm permanent termination of node [${alias}]?`)) return;
 
             try {
-                if (State.isFallbackMode) {
-                    if (alias.toLowerCase() === State.profile.alias.toLowerCase()) {
-                        State.profile.is_banned = true;
-                        localStorage.setItem('bm_local_user', JSON.stringify(State.profile));
-                        showToast(`Node ${alias} terminated.`);
-                        setTimeout(() => window.location.reload(), 1500);
-                    } else {
-                        showToast("ERR: Node not found in local cache.", "error");
-                    }
-                } else {
-                    const { data: users, error: findErr } = await State.supabase
-                        .from('profiles')
-                        .select('id')
-                        .eq('alias', alias)
-                        .limit(1);
+                const { data: users, error: findErr } = await State.supabase
+                    .from('profiles')
+                    .select('id')
+                    .eq('alias', alias)
+                    .limit(1);
 
-                    if (findErr || !users || users.length === 0) throw new Error("Node not found");
+                if (findErr || !users || users.length === 0) throw new Error("Node not found");
+                
+                const { error: updateErr } = await State.supabase
+                    .from('profiles')
+                    .update({ is_banned: true })
+                    .eq('id', users[0].id);
                     
-                    const { error: updateErr } = await State.supabase
-                        .from('profiles')
-                        .update({ is_banned: true })
-                        .eq('id', users[0].id);
-                        
-                    if (updateErr) throw updateErr;
+                if (updateErr) throw updateErr;
 
-                    showToast(`Node ${alias} flagged for termination.`);
-                    if(users[0].id === State.profile.id) {
-                        setTimeout(() => window.location.reload(), 1500);
-                    }
-                    document.getElementById('admin-ban-user').value = '';
+                showToast(`Node ${alias} flagged for termination.`);
+                if(users[0].id === State.profile.id) {
+                    setTimeout(() => window.location.reload(), 1500);
                 }
+                document.getElementById('admin-ban-user').value = '';
             } catch (err) {
                 showToast("Execute Ban Failed: " + err.message, "error");
             }
-             async function deleteAdminAsset(id) {
-            // First stop event propagation if needed, but not required since it's a modal action
+        }      async function deleteAdminAsset(id) {
             if (!confirm("ADMIN PURGE: Are you sure you want to permanently delete this asset from the database?")) return;
 
+            // Visual feedback handled by updateDetailsModalUI button re-render usually, but we could add inline here
             try {
-                if (State.isFallbackMode) {
-                    State.auctions = State.auctions.filter(a => a.id !== id);
-                    localStorage.setItem('bm_mock_auctions', JSON.stringify(State.auctions));
-                    closeModal('item-details-modal');
-                    processAndRenderAuctions();
-                    showToast("Asset purged (Local Cache).");
-                } else {
-                    const { error } = await State.supabase.from('auctions').delete().eq('id', id);
-                    if (error) throw error;
-                    closeModal('item-details-modal');
-                    // Real-time listener will handle UI update
-                    showToast("Asset permanently purged.");
-                }
+                const { error } = await State.supabase.from('auctions').delete().eq('id', id);
+                if (error) throw error;
+                
+                showToast("Admin Force Delete: Network Asset Terminated.", "success");
+                toggleDetailsModal(false);
+                softRefreshAuctions();
             } catch (err) {
-                console.error("Delete Error", err);
-                showToast("Delete failed. Check console.", "error");
+                console.error("Delete failed:", err);
+                showToast("Admin Action Failed: " + err.message, "error");
             }
         }
 
@@ -2449,63 +2300,17 @@
             btn.disabled = true;
 
             try {
-                if (State.isFallbackMode) {
-                    // Local Storage Mode
-                    await new Promise(r => setTimeout(r, 1000));
-                    const mockItem = {
-                        id: 'mock_' + Date.now(),
-                        title: supabaseData.title,
-                        description: supabaseData.description,
-                        imageUrl: supabaseData.image_url,
-                        category: category,
-                        startingPrice: supabaseData.starting_price,
-                        currentBid: supabaseData.current_bid,
-                        highestBidderId: supabaseData.highest_bidder_id,
-                        highestBidderName: supabaseData.highest_bidder_name,
-                        sellerId: supabaseData.seller_id,
-                        sellerName: supabaseData.seller_name,
-                        status: supabaseData.status,
-                        createdAt: new Date().toISOString()
-                    };
-                    State.auctions.unshift(mockItem);
-                    localStorage.setItem('bm_mock_auctions', JSON.stringify(State.auctions));
-                    processAndRenderAuctions();
-                } else {
-                    // REAL SUPABASE INSERT (no 'category' column in remote DB)
-                    const { error } = await State.supabase.from('auctions').insert([supabaseData]);
-                    if (error) throw error;
-                }
+                // REAL SUPABASE INSERT
+                const { error } = await State.supabase.from('auctions').insert([supabaseData]);
+                if (error) throw error;
 
                 toggleAddModal(false);
                 resetAddForm();
                 showToast("Asset successfully injected into network.");
 
             } catch (err) {
-                console.error("Injection error — activating fallback:", err);
-                // SILENT FAILOVER: Switch to local mode and save locally
-                activateFallback();
-                await new Promise(r => setTimeout(r, 500));
-                const mockItem = {
-                    id: 'mock_' + Date.now(),
-                    title: supabaseData.title,
-                    description: supabaseData.description,
-                    imageUrl: supabaseData.image_url,
-                    category: category,
-                    startingPrice: supabaseData.starting_price,
-                    currentBid: supabaseData.current_bid,
-                    highestBidderId: supabaseData.highest_bidder_id,
-                    highestBidderName: supabaseData.highest_bidder_name,
-                    sellerId: supabaseData.seller_id,
-                    sellerName: supabaseData.seller_name,
-                    status: supabaseData.status,
-                    createdAt: new Date().toISOString()
-                };
-                State.auctions.unshift(mockItem);
-                localStorage.setItem('bm_mock_auctions', JSON.stringify(State.auctions));
-                processAndRenderAuctions();
-                toggleAddModal(false);
-                resetAddForm();
-                showToast("Asset injected (local cache).");
+                console.error("Injection error:", err);
+                showToast("Injection Failed: " + err.message, "error");
             } finally {
                 btn.innerHTML = originalText;
                 btn.disabled = false;
@@ -2555,125 +2360,63 @@
             }
 
             try {
-                if (State.isFallbackMode) {
-                    await new Promise(r => setTimeout(r, 500));
-                    const idx = State.auctions.findIndex(a => a.id === itemId);
-                    if(idx > -1) {
-                        // Re-check current bid to prevent race condition
-                        if (bidAmount <= State.auctions[idx].currentBid) {
-                            showToast("ERR: Bid already surpassed. Refresh and try again.", "error");
-                            return;
-                        }
-                        State.auctions[idx].currentBid = bidAmount;
-                        State.auctions[idx].highestBidderId = State.profile.id;
-                        State.auctions[idx].highestBidderName = State.profile.alias;
-                        localStorage.setItem('bm_mock_auctions', JSON.stringify(State.auctions));
-                        if(isFromDetails) { State.selectedItem = State.auctions[idx]; updateDetailsModalUI(); }
-                        
-                        // Deduct locally for feedback
-                        State.profile.balance -= bidAmount;
-                        document.getElementById('sidebar-balance').textContent = `$${State.profile.balance.toLocaleString()}`;
-
-                        processAndRenderAuctions(true);
-                    }
-                } else {
-                    // Re-fetch latest bid from server to prevent race condition
-                    const { data: freshItem, error: fetchErr } = await State.supabase
-                        .from('auctions')
-                        .select('current_bid, status')
-                        .eq('id', itemId)
-                        .single();
-                    
-                    if (fetchErr) throw fetchErr;
-                    
-                    if (freshItem.status === 'sold') {
-                        showToast("ERR: This asset has already been sold.", "error");
-                        return;
-                    }
-                    
-                    if (bidAmount <= freshItem.current_bid) {
-                        showToast(`ERR: Bid already surpassed. Current bounty is $${freshItem.current_bid.toLocaleString()}.`, "error");
-                        if(isFromDetails) softRefreshAuctions();
-                        return;
-                    }
-
-                    const { error } = await State.supabase
-                        .from('auctions')
-                        .update({
-                            current_bid: bidAmount,
-                            highest_bidder_id: State.profile.id,
-                            highest_bidder_name: State.profile.alias
-                        })
-                        .eq('id', itemId);
-                        
-                    if(error) throw error;
-                    
-                    // Deduct balance from DB
-                    const newBal = State.profile.balance - bidAmount;
-                    await State.supabase.from('profiles').update({ balance: newBal }).eq('id', State.profile.id).then();
-                    State.profile.balance = newBal;
-                    document.getElementById('sidebar-balance').textContent = `$${State.profile.balance.toLocaleString()}`;
+                // Re-fetch latest bid from server to prevent race condition
+                const { data: freshItem, error: fetchErr } = await State.supabase
+                    .from('auctions')
+                    .select('current_bid, status')
+                    .eq('id', itemId)
+                    .single();
+                
+                if (fetchErr) throw fetchErr;
+                
+                if (freshItem.status === 'sold') {
+                    showToast("ERR: This asset has already been sold.", "error");
+                    return;
                 }
+                
+                if (bidAmount <= freshItem.current_bid) {
+                    showToast(`ERR: Bid already surpassed. Current bounty is $${freshItem.current_bid.toLocaleString()}.`, "error");
+                    if(isFromDetails) softRefreshAuctions();
+                    return;
+                }
+
+                const { error } = await State.supabase
+                    .from('auctions')
+                    .update({
+                        current_bid: bidAmount,
+                        highest_bidder_id: State.profile.id,
+                        highest_bidder_name: State.profile.alias
+                    })
+                    .eq('id', itemId);
+                    
+                if(error) throw error;
+                
+                // Deduct balance from DB
+                const newBal = State.profile.balance - bidAmount;
+                await State.supabase.from('profiles').update({ balance: newBal }).eq('id', State.profile.id).then();
+                State.profile.balance = newBal;
+                document.getElementById('sidebar-balance').textContent = `$${State.profile.balance.toLocaleString()}`;
                 
                 showToast("Bounty confirmed. Target locked. Balance updated.");
             } catch (err) {
-                console.error("Bid error — activating fallback:", err);
-                activateFallback();
-                const idx = State.auctions.findIndex(a => a.id === itemId);
-                if(idx > -1) {
-                    if (bidAmount <= State.auctions[idx].currentBid) {
-                        showToast("ERR: Bid already surpassed.", "error");
-                        return;
-                    }
-                    State.auctions[idx].currentBid = bidAmount;
-                    State.auctions[idx].highestBidderId = State.profile.id;
-                    State.auctions[idx].highestBidderName = State.profile.alias;
-                    localStorage.setItem('bm_mock_auctions', JSON.stringify(State.auctions));
-                    
-                    // Deduct locally
-                    State.profile.balance -= bidAmount;
-                    document.getElementById('sidebar-balance').textContent = `$${State.profile.balance.toLocaleString()}`;
-                    
-                    if(isFromDetails) { State.selectedItem = State.auctions[idx]; updateDetailsModalUI(); }
-                    processAndRenderAuctions(true);
-                }
-                showToast("Bounty confirmed. Balance updated (local cache).");
+                console.error("Bid error:", err);
+                showToast("Bid Processing Failed: " + err.message, "error");
             }
         }
 
         async function acceptBid(itemId) {
             try {
-                if (State.isFallbackMode) {
-                    await new Promise(r => setTimeout(r, 500));
-                    const idx = State.auctions.findIndex(a => a.id === itemId);
-                    if(idx > -1) {
-                        State.auctions[idx].status = 'sold';
-                        localStorage.setItem('bm_mock_auctions', JSON.stringify(State.auctions));
-                        updateDetailsModalUI();
-                        processAndRenderAuctions(true);
-                    }
-                } else {
-                    const { error } = await State.supabase
-                        .from('auctions')
-                        .update({ status: 'sold' })
-                        .eq('id', itemId);
-                        
-                    if(error) throw error;
-                }
+                const { error } = await State.supabase
+                    .from('auctions')
+                    .update({ status: 'sold' })
+                    .eq('id', itemId);
+                    
+                if(error) throw error;
                 
                 showToast("Execution complete. Asset sealed.");
             } catch (err) {
-                console.error("Accept error — activating fallback:", err);
-                // SILENT FAILOVER
-                activateFallback();
-                const idx = State.auctions.findIndex(a => a.id === itemId);
-                if(idx > -1) {
-                    State.auctions[idx].status = 'sold';
-                    localStorage.setItem('bm_mock_auctions', JSON.stringify(State.auctions));
-                    updateDetailsModalUI();
-                    processAndRenderAuctions(true);
-                }
-                showToast("Execution complete (local cache).");
+                console.error("Accept error:", err);
+                showToast("Execution Failed: " + err.message, "error");
             }
         }
 
