@@ -63,8 +63,6 @@
          ========================================== -->
     <script src="https://unpkg.com/lucide@latest"></script>
 
-
-
     <!-- ==========================================
          CUSTOM STYLES & KEYFRAMES
          ========================================== -->
@@ -415,10 +413,10 @@
     <!-- ==========================================
          TERMINAL BOOT SEQUENCE (INITIAL LOAD)
          ========================================== -->
-    <div id="boot-sequence" style="position:fixed;inset:0;z-index:500;background:#000;display:flex;flex-direction:column;justify-content:flex-end;padding:2rem;font-family:monospace;color:#22c55e;font-size:14px;overflow:hidden;">
-        <div id="boot-text" style="display:flex;flex-direction:column;gap:4px;opacity:0.85;"></div>
-        <div style="margin-top:8px;height:24px;display:flex;align-items:center;">
-            <span id="boot-cursor" style="width:12px;height:20px;background:#22c55e;animation:pulse 1s infinite;"></span>
+    <div id="boot-sequence" class="fixed inset-0 z-[500] bg-black flex flex-col justify-end p-8 font-mono text-green-500 text-sm md:text-base overflow-hidden transition-opacity duration-1000">
+        <div id="boot-text" class="whitespace-pre-wrap flex flex-col gap-1 opacity-80"></div>
+        <div class="mt-2 flex items-center h-6">
+            <span id="boot-cursor" class="w-3 h-5 bg-green-500 animate-pulse"></span>
         </div>
     </div>
 
@@ -439,7 +437,7 @@
                 <p class="flex gap-3 items-start"><span class="text-red-500 font-bold mt-0.5">2.</span> <span>Malicious or bad use of this terminal will lead to a <strong>PERMANENT BAN</strong>. Use wisely.</span></p>
                 
                 <div class="mt-4 pt-4 border-t border-red-900/30 text-center text-xs text-red-400 font-bold uppercase tracking-widest">
-                    All transactions are final. The network has no memory — violations are permanent.
+                    Important: You will receive a One-Time Password via email to authenticate.
                 </div>
             </div>
 
@@ -448,7 +446,7 @@
                     Disagree
                 </button>
                 <button onclick="handleAgree()" class="py-3 bg-red-900 hover:bg-red-800 text-white border border-red-500 rounded-xl font-mono font-bold uppercase tracking-widest text-xs shadow-neon-red transition-all active:scale-95">
-                    I Agree — Enter
+                    I Agree ΓÇö Enter
                 </button>
             </div>
         </div>
@@ -472,10 +470,10 @@
             <h2 id="auth-title" class="text-2xl font-sans font-bold text-white mb-2 text-center uppercase tracking-tight">Access Terminal</h2>
             <p id="auth-subtitle" class="text-zinc-500 text-xs mb-8 text-center font-mono uppercase tracking-widest">Identify yourself to the network.</p>
 
-            <!-- Inputs -->
+                <!-- Inputs -->
             <div class="space-y-5">
-
-                <div class="relative group">
+                
+                <div id="alias-field" class="relative hidden group">
                     <i data-lucide="terminal" class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600 group-focus-within:text-red-500 transition-colors"></i>
                     <input type="text" id="auth-alias" placeholder="Criminal Alias (e.g. Ghost_99)" class="w-full p-4 pl-12 bg-black border border-zinc-800 rounded-xl text-white placeholder:text-zinc-700 focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500 font-mono text-sm shadow-glass-inset transition-all">
                 </div>
@@ -484,21 +482,21 @@
                     <i data-lucide="mail" class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600 group-focus-within:text-red-500 transition-colors"></i>
                     <input type="email" id="auth-email" placeholder="Encrypted Email Address" class="w-full p-4 pl-12 bg-black border border-zinc-800 rounded-xl text-white placeholder:text-zinc-700 focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500 font-mono text-sm shadow-glass-inset transition-all">
                 </div>
-
+                
                 <button id="auth-submit-btn" onclick="handleAuthAction()" class="w-full py-4 bg-red-900 hover:bg-red-800 border border-red-700 text-white rounded-xl font-bold active:scale-95 spring-transition shadow-neon-red flex justify-center items-center gap-2 mt-2 uppercase tracking-widest font-mono text-sm">
-                    Connect to Network <i data-lucide="cpu" class="w-4 h-4"></i>
+                    Request Authentication Token <i data-lucide="cpu" class="w-4 h-4"></i>
                 </button>
             </div>
 
-            <!-- Toggle (returning user hint) -->
+            <!-- Toggles -->
             <div class="mt-8 text-center border-t border-zinc-800 pt-6">
-                <p class="text-[10px] font-mono text-zinc-600 uppercase tracking-widest">Returning? Enter the same email + alias to restore your session.</p>
+                <button onclick="toggleAuthMode()" id="auth-toggle-btn" class="text-xs font-mono font-bold text-zinc-500 hover:text-red-400 transition-colors uppercase tracking-widest">
+                    Request New Identity
+                </button>
             </div>
-
+            
             <p id="auth-error" class="text-red-400 bg-red-950/50 p-3 rounded-lg border border-red-900 text-xs font-mono mt-6 hidden w-full text-center"></p>
         </div>
-
-
 
         <!-- Simulated 2FA Hacker Screen (Shown during processing) -->
         <div id="auth-processing" class="w-full max-w-md glass-panel rounded-2xl p-8 flex flex-col items-center justify-center relative overflow-hidden transition-all duration-700 absolute hidden opacity-0 border-t-2 border-t-green-500 min-h-[400px]">
@@ -780,6 +778,45 @@
                     </button>
                 </div>
             </div>
+        </div>
+        <!-- OTP Verification Screen -->
+        <div id="otp-screen" class="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md spring-transition hidden-state">
+            <div class="w-full max-w-md glass-panel p-8 sm:p-10 flex flex-col items-center justify-center relative z-10 mx-4 border-2 border-red-900/50 shadow-neon-red">
+                <div class="mb-6 flex space-x-2 w-full justify-center">
+                    <div class="w-16 h-1 bg-red-900"></div>
+                    <div class="w-2 h-1 bg-red-500 animate-pulse"></div>
+                </div>
+                
+                <i data-lucide="shield-check" class="w-16 h-16 text-red-500 mb-6 drop-shadow-[0_0_15px_rgba(239,68,68,0.5)]"></i>
+                
+                <h2 class="text-2xl font-mono font-black text-white tracking-tighter uppercase mb-2 text-center">Identity Verification</h2>
+                <p class="text-zinc-400 font-mono text-xs text-center mb-8 uppercase tracking-widest leading-relaxed">
+                    Enter the 6-digit cryptographic token generated for your node to proceed.
+                </p>
+
+                <div class="mb-6 text-center w-full bg-black/50 p-4 border border-zinc-800 rounded mb-8">
+                    <p class="text-[10px] text-zinc-500 uppercase tracking-widest mb-2 font-bold">Check your encrypted mail</p>
+                    <p class="text-[9px] text-zinc-600 uppercase italic">A token was dispatched to your address.</p>
+                </div>
+
+                <div class="flex justify-center gap-2 mb-8" id="otp-input-group">
+                    <input type="text" maxlength="1" class="otp-input" autofocus>
+                    <input type="text" maxlength="1" class="otp-input">
+                    <input type="text" maxlength="1" class="otp-input">
+                    <input type="text" maxlength="1" class="otp-input">
+                    <input type="text" maxlength="1" class="otp-input">
+                    <input type="text" maxlength="1" class="otp-input">
+                </div>
+
+                <button onclick="verifyOTP()" id="verify-otp-btn" class="ripple-btn w-full bg-red-600 hover:bg-red-500 text-white font-black font-mono uppercase tracking-widest py-4 px-6 rounded transition-all flex justify-center items-center gap-2 mt-4 shadow-neon-red active:scale-[0.98]">
+                    Establish Link <i data-lucide="zap" class="w-4 h-4"></i>
+                </button>
+                
+                <button onclick="cancelOTP()" class="mt-6 text-xs text-zinc-500 hover:text-red-400 font-mono uppercase tracking-widest transition-colors flex items-center gap-1">
+                    <i data-lucide="x-circle" class="w-3 h-3"></i> Abort Connection
+                </button>
+            </div>
+        </div>
     </div>
 
     <!-- ITEM DETAILS FULL MODAL -->
@@ -965,7 +1002,6 @@
         window.placeBid = placeBid;
         window.acceptBid = acceptBid;
         window.setFilter = setFilter;
-        window.handleSearch = handleSearch;
         window.openItemDetails = openItemDetails;
         window.deleteAdminAsset = deleteAdminAsset;
         window.handleAgree = handleAgree;
@@ -975,15 +1011,9 @@
         window.adminAddBalance = adminAddBalance;
         window.adminBanUser = adminBanUser;
         window.postComment = postComment;
-        window.shareScreencard = shareScreencard;
-
-        // handleSearch: used by the search bar onkeyup
-        function handleSearch() {
-            const el = document.getElementById('search-input');
-            if (!el) return;
-            State.searchQuery = el.value.toLowerCase();
-            processAndRenderAuctions();
-        }
+        window.setupOTPInputs = setupOTPInputs;
+        window.cancelOTP = cancelOTP;
+        window.verifyOTP = verifyOTP;
 
         // ==========================================
         // SYSTEM INITIALIZATION
@@ -998,7 +1028,7 @@
             // Bind specialized DOM listeners
             bindDOMEvents();
 
-            // Show disclaimer AFTER boot is fully gone
+            // Intercept boot sequence to show disclaimer first
             showDisclaimerScreen();
         }
 
@@ -1041,16 +1071,13 @@
 
             // Debounced search logic
             let searchTimeout;
-            const searchInput = document.getElementById('search-input');
-            if (searchInput) {
-                searchInput.addEventListener('input', (e) => {
-                    clearTimeout(searchTimeout);
-                    searchTimeout = setTimeout(() => {
-                        State.searchQuery = e.target.value.toLowerCase();
-                        processAndRenderAuctions();
-                    }, 300); // 300ms debounce
-                });
-            }
+            document.getElementById('search-input').addEventListener('input', (e) => {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    State.searchQuery = e.target.value.toLowerCase();
+                    processAndRenderAuctions();
+                }, 300); // 300ms debounce
+            });
         }
 
         // ==========================================
@@ -1063,15 +1090,24 @@
             try {
                 State.supabase = createClient(supabaseUrl, supabaseKey);
                 
-                const localUser = localStorage.getItem('bm_local_user');
-                if (localUser) {
-                    const parsed = JSON.parse(localUser);
-                    State.user = { email: parsed.email };
-                    State.profile = parsed;
-                    bootMainApp();
+                const { data: { session }, error } = await State.supabase.auth.getSession();
+                if (error) throw error;
+
+                State.supabase.auth.onAuthStateChange(async (event, session) => {
+                    if (session) {
+                        State.user = session.user;
+                        await fetchProfile();
+                    } else {
+                        State.user = null;
+                        State.profile = null;
+                        showAuthScreen();
+                    }
+                });
+
+                if (session) {
+                    State.user = session.user;
+                    await fetchProfile();
                 } else {
-                    State.user = null;
-                    State.profile = null;
                     showAuthScreen();
                 }
 
@@ -1083,8 +1119,104 @@
         }
 
         // ==========================================
-        // AUTHENTICATION (Direct Profile Login)
+        // AUTHENTICATION & OTP
         // ==========================================
+        let currentAuthEmail = "";
+        let currentAuthAlias = "";
+
+        function setupOTPInputs() {
+            const inputs = document.querySelectorAll('.otp-input');
+            inputs.forEach((input, index) => {
+                input.addEventListener('input', (e) => {
+                    if (e.target.value.length === 1 && index < inputs.length - 1) {
+                        inputs[index + 1].focus();
+                    }
+                });
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Backspace' && !e.target.value && index > 0) {
+                        inputs[index - 1].focus();
+                    }
+                });
+            });
+        }
+
+        function cancelOTP() {
+            document.getElementById('otp-screen').classList.replace('visible-state', 'hidden-state');
+            document.getElementById('auth-form').classList.replace('hidden-state', 'visible-state');
+            document.querySelectorAll('.otp-input').forEach(i => i.value = '');
+            const btnEl = document.getElementById('auth-submit-btn');
+            btnEl.innerHTML = `Request Authentication Token <i data-lucide="cpu" class="w-4 h-4"></i>`;
+            btnEl.disabled = false;
+        }
+
+        async function verifyOTP() {
+            const inputs = document.querySelectorAll('.otp-input');
+            let enteredOTP = "";
+            inputs.forEach(i => enteredOTP += i.value);
+
+            if (enteredOTP.length !== 6) {
+                inputs.forEach(i => {
+                    i.classList.add('border-red-500', 'bg-red-950/20');
+                    setTimeout(() => i.classList.remove('border-red-500', 'bg-red-950/20'), 1000);
+                });
+                return;
+            }
+
+            const verifyBtn = document.getElementById('verify-otp-btn');
+            verifyBtn.innerHTML = `<i data-lucide="loader" class="w-4 h-4 animate-spin"></i> Initializing...`;
+            verifyBtn.disabled = true;
+
+            try {
+                const { data, error } = await State.supabase.auth.verifyOtp({
+                    email: currentAuthEmail,
+                    token: enteredOTP,
+                    type: 'email'
+                });
+
+                if (error) throw error;
+                
+                // Check if profile exists, if not create it
+                if (data.user) {
+                    const { data: profileCheck, error: pErr } = await State.supabase
+                        .from('profiles')
+                        .select('id')
+                        .eq('id', data.user.id)
+                        .single();
+                        
+                    if (pErr && pErr.code === 'PGRST116') {
+                        // Profile doesn't exist. Create it with 0 balance.
+                        await State.supabase.from('profiles').upsert({
+                            id: data.user.id,
+                            alias: currentAuthAlias || 'Node_' + Math.floor(Math.random() * 9999),
+                            balance: 0
+                        });
+                    }
+                }
+
+                // OTP Success
+                document.getElementById('otp-screen').classList.replace('visible-state', 'hidden-state');
+                
+                // Re-show processing screen for final boot
+                const processingScreenEl = document.getElementById('auth-processing');
+                const processingText = document.getElementById('auth-processing-text');
+                processingScreenEl.classList.remove('hidden');
+                processingScreenEl.classList.replace('opacity-0', 'opacity-100');
+                processingText.textContent = "VERIFICATION COMPLETE."; 
+                
+                // fetchProfile and bootMainApp will be called by onAuthStateChange listener
+                
+            } catch (err) {
+                console.error("OTP Error:", err);
+                verifyBtn.innerHTML = `Establish Link <i data-lucide="zap" class="w-4 h-4"></i>`;
+                verifyBtn.disabled = false;
+                showToast("Invalid code or expired. Try again.", "error");
+                inputs.forEach(i => {
+                    i.classList.add('border-red-500', 'bg-red-950/20');
+                    setTimeout(() => i.classList.remove('border-red-500', 'bg-red-950/20'), 1000);
+                });
+            }
+        }
+
         async function handleAuthAction() {
             const email = document.getElementById('auth-email').value.trim();
             const alias = document.getElementById('auth-alias').value.trim();
@@ -1098,67 +1230,43 @@
                 return;
             }
 
+            if (!State.isLoginMode && !alias) {
+                showAuthError("ERR: Criminal Alias is required for new nodes.");
+                return;
+            }
+
+            currentAuthEmail = email;
+            currentAuthAlias = alias;
+
             // Visual Processing State
             btn.innerHTML = `<i data-lucide="loader" class="w-4 h-4 animate-spin"></i> Processing...`;
             btn.disabled = true;
 
             try {
-                // 1. Check if profile exists by email
-                const { data: existingProfiles, error: fetchErr } = await State.supabase
-                    .from('profiles')
-                    .select('*')
-                    .eq('email', email)
-                    .limit(1);
-
-                if (fetchErr) throw fetchErr;
-
-                let profile;
-                if (existingProfiles && existingProfiles.length > 0) {
-                    // Profile exists -> Login
-                    profile = existingProfiles[0];
-                } else {
-                    // Profile does not exist -> Create new
-                    if (!alias) {
-                        throw new Error("Criminal Alias is required for new nodes.");
+                // Send OTP Magic Link
+                const { error } = await State.supabase.auth.signInWithOtp({
+                    email: email,
+                    options: {
+                        shouldCreateUser: !State.isLoginMode
                     }
-                    
-                    // Generate a random UUID for the new user
-                    const generatedId = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-                        var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
-                        return v.toString(16);
-                    });
-                    
-                    profile = {
-                        id: generatedId,
-                        alias: alias,
-                        email: email,
-                        balance: 0
-                    };
+                });
 
-                    const { error: insErr } = await State.supabase.from('profiles').insert([profile]);
-                    if (insErr) throw insErr;
-                }
+                if (error) throw error;
 
-                // 2. Set Local State
-                State.user = { email: email };
-                State.profile = profile;
-                localStorage.setItem('bm_local_user', JSON.stringify(profile));
+                // Show OTP input screen
+                document.getElementById('auth-form').classList.add('hidden-state');
+                document.getElementById('auth-form').classList.remove('visible-state');
                 
-                // Show verification complete sequence
-                const processingScreenEl = document.getElementById('auth-processing');
-                const processingText = document.getElementById('auth-processing-text');
-                
-                document.getElementById('auth-form').classList.add('hidden');
-                processingScreenEl.classList.remove('hidden');
-                processingScreenEl.classList.replace('opacity-0', 'opacity-100');
-                processingText.textContent = "VERIFICATION COMPLETE."; 
-                
-                setTimeout(() => bootMainApp(), 800);
+                setupOTPInputs();
+                const otpScreen = document.getElementById('otp-screen');
+                otpScreen.classList.remove('hidden-state');
+                otpScreen.classList.add('visible-state');
+                setTimeout(() => document.querySelector('.otp-input').focus(), 100);
 
             } catch (err) {
                 console.error("Auth Fail:", err);
                 showAuthError(`ERR: ${err.message || 'Transmission failed.'}`);
-                btn.innerHTML = `Connect to Network <i data-lucide="cpu" class="w-4 h-4"></i>`;
+                btn.innerHTML = `Request Authentication Token <i data-lucide="cpu" class="w-4 h-4"></i>`;
                 btn.disabled = false;
             }
         }
@@ -1177,8 +1285,13 @@
         }
 
         async function handleLogout() {
+            try {
+                if (State.supabase) {
+                    await State.supabase.auth.signOut();
+                }
+            } catch(e) { console.warn('SignOut error (non-critical):', e); }
+            
             localStorage.removeItem('bm_local_user');
-            window.currentOTP = null;
             State.user = null;
             State.profile = null;
             State.auctions = [];
@@ -1319,7 +1432,7 @@
                     .subscribe();
 
             } catch (err) {
-                console.error("Data fetch error — activating fallback:", err);
+                console.error("Data fetch error ΓÇö activating fallback:", err);
                 // SILENT FAILOVER: Switch to local mode and load mock data
                 activateFallback();
                 const localData = localStorage.getItem('bm_mock_auctions');
@@ -1394,7 +1507,7 @@
             let html = '';
             for (let r = 0; r < 2; r++) {
                 messages.forEach(m => {
-                    html += `<span class="ticker-item"><span class="${m.cls}">▎${m.text}</span>${m.value ? `<span class="${m.cls} font-bold">${m.value}</span>` : ''}</span><span class="ticker-separator"></span>`;
+                    html += `<span class="ticker-item"><span class="${m.cls}">ΓûÄ${m.text}</span>${m.value ? `<span class="${m.cls} font-bold">${m.value}</span>` : ''}</span><span class="ticker-separator"></span>`;
                 });
             }
             track.innerHTML = html;
@@ -1944,7 +2057,7 @@
             ctx.fillStyle = isSold ? 'rgba(127,29,29,0.6)' : 'rgba(6,78,59,0.6)';
             roundRect(ctx, 430, 25, isSold ? 80 : 70, 22, 4); ctx.fill();
             ctx.fillStyle = isSold ? '#fca5a5' : '#86efac'; ctx.font = 'bold 9px monospace';
-            ctx.fillText(isSold ? '⊘ SEALED' : '◉ ACTIVE', 440, 40);
+            ctx.fillText(isSold ? 'Γèÿ SEALED' : 'Γùë ACTIVE', 440, 40);
 
             // Divider
             ctx.strokeStyle = 'rgba(63,63,70,0.5)'; ctx.lineWidth = 1;
@@ -1999,7 +2112,7 @@
             ctx.beginPath(); ctx.moveTo(0, H - 50); ctx.lineTo(W, H - 50); ctx.stroke();
 
             ctx.fillStyle = '#52525b'; ctx.font = '10px monospace';
-            ctx.fillText('NONSENCE BLACK MARKET · THE INFINITE PIT', 30, H - 22);
+            ctx.fillText('NONSENCE BLACK MARKET ┬╖ THE INFINITE PIT', 30, H - 22);
             const ts = new Date().toLocaleString();
             ctx.fillText(ts, W - ctx.measureText(ts).width - 30, H - 22);
 
@@ -2291,7 +2404,7 @@
         function activateFallback() {
             if (State.isFallbackMode) return; // Already in fallback
             State.isFallbackMode = true;
-            console.warn('⚠ FALLBACK ACTIVATED — All operations rerouted to localStorage.');
+            console.warn('ΓÜá FALLBACK ACTIVATED ΓÇö All operations rerouted to localStorage.');
             showToast('DB Unreachable. Running in Local Simulation Mode.', 'error');
             
             // Update UI indicators
@@ -2336,10 +2449,7 @@
         async function playTerminalBootSequence() {
             const bootContainer = document.getElementById('boot-sequence');
             const bootText = document.getElementById('boot-text');
-
-            // Safety: if boot element doesn't exist, skip immediately
-            if (!bootContainer || !bootText) return;
-
+            
             const lines = [
                 "INITIALIZING NEURAL LINK...",
                 "LOADING ENCRYPTION PROTOCOLS [OK]",
@@ -2350,42 +2460,25 @@
                 "CONNECTION SECURE. WELCOME TO THE BLACK MARKET."
             ];
 
-            // Hard timeout safety — boot screen MUST disappear within 12 seconds
-            let safetyFired = false;
-            const safetyTimeout = setTimeout(() => {
-                safetyFired = true;
-                try { bootContainer.remove(); } catch(e) {}
-            }, 12000);
-
-            try {
-                for (let i = 0; i < lines.length; i++) {
-                    if (safetyFired) break;
-                    const lineObj = document.createElement('div');
-                    bootText.appendChild(lineObj);
-
-                    for (let char of lines[i]) {
-                        if (safetyFired) break;
-                        lineObj.textContent += char;
-                        await new Promise(r => setTimeout(r, 15));
-                    }
-                    await new Promise(r => setTimeout(r, 200));
+            for (let i = 0; i < lines.length; i++) {
+                const lineObj = document.createElement('div');
+                bootText.appendChild(lineObj);
+                
+                // Typing effect
+                for(let char of lines[i]) {
+                    lineObj.textContent += char;
+                    await new Promise(r => setTimeout(r, 15)); // Typing speed
                 }
+                await new Promise(r => setTimeout(r, 200)); // Pause between lines
+            }
 
-                if (!safetyFired) await new Promise(r => setTimeout(r, 600));
-            } catch(e) { /* swallow errors so boot never blocks */ }
+            await new Promise(r => setTimeout(r, 600)); // Final pause
 
-            clearTimeout(safetyTimeout);
-
-            // Fade out AND fully await removal before resuming bootSystem()
-            await new Promise(resolve => {
-                bootContainer.style.transition = 'opacity 0.8s ease';
-                bootContainer.style.opacity = '0';
-                bootContainer.style.pointerEvents = 'none';
-                setTimeout(() => {
-                    try { bootContainer.remove(); } catch(e) {}
-                    resolve();
-                }, 900);
-            });
+            // Fade out boot screen
+            bootContainer.style.opacity = '0';
+            setTimeout(() => {
+                bootContainer.remove();
+            }, 1000);
         }
 
         // Matrix Digital Rain Background
@@ -2397,7 +2490,7 @@
             canvas.height = window.innerHeight;
             
             // Matrix characters (Katakana + Latin + Digits)
-            const katakana = 'アァカサタナハマヤャラワワヰヱヲンヴッヂヅヅヅツテトダヂヅデドバビブベボパピプペポ';
+            const katakana = 'πéóπéíπé½πé╡πé┐πâèπâÅπâ₧πâñπâúπâ⌐πâ»πâ»πâ░πâ▒πâ▓πâ│πâ┤πââπâéπâàπâàπâàπâäπâåπâêπâÇπâéπâàπâçπâëπâÉπâôπâûπâÖπâ£πâæπâöπâùπâÜπâ¥';
             const latin = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
             const nums = '0123456789';
             const alphabet = katakana + latin + nums;
@@ -2473,9 +2566,9 @@
         // ==========================================
         const MEME_TAGLINES = [
             "Bro just one more bid trust me.", "Low bid = instant embarrassment.", "No guts, no bids.", "Skill issue if you lose.", "Auction but toxic.",
-            "Blink and it’s gone.", "Outbid or get humbled.", "You hesitated. It’s mine now.", "That was your chance btw.", "Bro fumbled the bid 😭",
-            "Wallet vs ego. Choose fast.", "You really gonna let that slide?", "One more bid won’t hurt (it will).", "Too slow. Try again.", "You watching or winning?",
-            "If you lost, just say that.", "This ain’t for the weak.", "Second place is just first loser.", "You bid… and still lost?", "Pressure makes diamonds… or losers.",
+            "Blink and itΓÇÖs gone.", "Outbid or get humbled.", "You hesitated. ItΓÇÖs mine now.", "That was your chance btw.", "Bro fumbled the bid ≡ƒÿ¡",
+            "Wallet vs ego. Choose fast.", "You really gonna let that slide?", "One more bid wonΓÇÖt hurt (it will).", "Too slow. Try again.", "You watching or winning?",
+            "If you lost, just say that.", "This ainΓÇÖt for the weak.", "Second place is just first loser.", "You bidΓÇª and still lost?", "Pressure makes diamondsΓÇª or losers.",
             "Think fast. Bid faster.", "Calculated risk. Emotional damage.", "Strategic until you panic bid.", "Logic left the chat.", "Welcome to bad decisions."
         ];
 
