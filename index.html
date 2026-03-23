@@ -64,6 +64,16 @@
     <script src="https://unpkg.com/lucide@latest"></script>
 
     <!-- ==========================================
+         EMAILJS
+         ========================================== -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <script type="text/javascript">
+       (function(){
+          emailjs.init("6CkOb9c2S-J3aFH5l");
+       })();
+    </script>
+
+    <!-- ==========================================
          CUSTOM STYLES & KEYFRAMES
          ========================================== -->
     <style>
@@ -1090,24 +1100,15 @@
             try {
                 State.supabase = createClient(supabaseUrl, supabaseKey);
                 
-                const { data: { session }, error } = await State.supabase.auth.getSession();
-                if (error) throw error;
-
-                State.supabase.auth.onAuthStateChange(async (event, session) => {
-                    if (session) {
-                        State.user = session.user;
-                        await fetchProfile();
-                    } else {
-                        State.user = null;
-                        State.profile = null;
-                        showAuthScreen();
-                    }
-                });
-
-                if (session) {
-                    State.user = session.user;
-                    await fetchProfile();
+                const localUser = localStorage.getItem('bm_local_user');
+                if (localUser) {
+                    const parsed = JSON.parse(localUser);
+                    State.user = { email: parsed.email };
+                    State.profile = parsed;
+                    bootMainApp();
                 } else {
+                    State.user = null;
+                    State.profile = null;
                     showAuthScreen();
                 }
 
@@ -1167,33 +1168,54 @@
             verifyBtn.disabled = true;
 
             try {
-                const { data, error } = await State.supabase.auth.verifyOtp({
-                    email: currentAuthEmail,
-                    token: enteredOTP,
-                    type: 'email'
-                });
-
-                if (error) throw error;
+                if (enteredOTP !== window.currentOTP) {
+                    throw new Error("Invalid OTP code.");
+                }
                 
-                // Check if profile exists, if not create it
-                if (data.user) {
-                    const { data: profileCheck, error: pErr } = await State.supabase
+                let profile;
+                if (State.isLoginMode) {
+                    // Try to find profile by email
+                    const { data: pData, error: pErr } = await State.supabase
                         .from('profiles')
-                        .select('id')
-                        .eq('id', data.user.id)
-                        .single();
+                        .select('*')
+                        .eq('email', currentAuthEmail)
+                        .limit(1);
                         
-                    if (pErr && pErr.code === 'PGRST116') {
-                        // Profile doesn't exist. Create it with 0 balance.
-                        await State.supabase.from('profiles').upsert({
-                            id: data.user.id,
-                            alias: currentAuthAlias || 'Node_' + Math.floor(Math.random() * 9999),
-                            balance: 0
-                        });
+                    if (pErr) throw pErr;
+                    
+                    if (pData && pData.length > 0) {
+                        profile = pData[0];
+                    } else {
+                        throw new Error("Account not found. Request New Identity.");
+                    }
+                } else {
+                    // Sign up mode: generate UUID and insert
+                    const generatedId = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                        var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+                        return v.toString(16);
+                    });
+                    
+                    profile = {
+                        id: generatedId,
+                        alias: currentAuthAlias || 'Node_' + Math.floor(Math.random() * 9999),
+                        email: currentAuthEmail,
+                        balance: 0
+                    };
+
+                    const { error: insErr } = await State.supabase.from('profiles').insert([profile]);
+                    if (insErr) {
+                        if (insErr.code === '23505') {
+                            throw new Error("Email or alias already registered.");
+                        }
+                        throw insErr;
                     }
                 }
 
-                // OTP Success
+                State.user = { email: currentAuthEmail };
+                State.profile = profile;
+                localStorage.setItem('bm_local_user', JSON.stringify(profile));
+
+                // OTP Success UI
                 document.getElementById('otp-screen').classList.replace('visible-state', 'hidden-state');
                 
                 // Re-show processing screen for final boot
@@ -1203,13 +1225,13 @@
                 processingScreenEl.classList.replace('opacity-0', 'opacity-100');
                 processingText.textContent = "VERIFICATION COMPLETE."; 
                 
-                // fetchProfile and bootMainApp will be called by onAuthStateChange listener
+                setTimeout(() => bootMainApp(), 800);
                 
             } catch (err) {
                 console.error("OTP Error:", err);
                 verifyBtn.innerHTML = `Establish Link <i data-lucide="zap" class="w-4 h-4"></i>`;
                 verifyBtn.disabled = false;
-                showToast("Invalid code or expired. Try again.", "error");
+                showToast(err.message || "Invalid code.", "error");
                 inputs.forEach(i => {
                     i.classList.add('border-red-500', 'bg-red-950/20');
                     setTimeout(() => i.classList.remove('border-red-500', 'bg-red-950/20'), 1000);
@@ -1243,15 +1265,20 @@
             btn.disabled = true;
 
             try {
-                // Send OTP Magic Link
-                const { error } = await State.supabase.auth.signInWithOtp({
-                    email: email,
-                    options: {
-                        shouldCreateUser: !State.isLoginMode
-                    }
-                });
+                // Generate 6-digit OTP
+                const generatedOTP = Math.floor(100000 + Math.random() * 900000).toString();
+                window.currentOTP = generatedOTP;
 
-                if (error) throw error;
+                // Send via EmailJS
+                await emailjs.send(
+                    "service_2hp7moh",
+                    "template_4lqdnzg",
+                    {
+                        to_email: email,
+                        otp: generatedOTP,
+                        alias: alias || 'Agent'
+                    }
+                );
 
                 // Show OTP input screen
                 document.getElementById('auth-form').classList.add('hidden-state');
@@ -1285,13 +1312,8 @@
         }
 
         async function handleLogout() {
-            try {
-                if (State.supabase) {
-                    await State.supabase.auth.signOut();
-                }
-            } catch(e) { console.warn('SignOut error (non-critical):', e); }
-            
             localStorage.removeItem('bm_local_user');
+            window.currentOTP = null;
             State.user = null;
             State.profile = null;
             State.auctions = [];
