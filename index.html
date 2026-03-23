@@ -998,8 +998,8 @@
             // Bind specialized DOM listeners
             bindDOMEvents();
 
-            // Show disclaimer AFTER boot is fully gone
-            showDisclaimerScreen();
+            // Boot database and logic directly
+            await initDatabase();
         }
 
         // ==========================================
