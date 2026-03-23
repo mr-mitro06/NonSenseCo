@@ -1,4 +1,4 @@
-const CACHE_NAME = 'nonsense-bm-cache-v3';
+const CACHE_NAME = 'nonsense-bm-cache-v1';
 const urlsToCache = [
   './',
   './index.html',
